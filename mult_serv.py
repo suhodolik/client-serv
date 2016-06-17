@@ -2,6 +2,7 @@
 
 import socket
 from threading import Thread
+from time import time, ctime, sleep
 
 TCP_IP = 'localhost'
 TCP_PORT = 9001
@@ -15,7 +16,7 @@ class ClientThread(Thread):
         self.ip = ip
         self.port = port
         self.sock = sock
-        print (" New thread started for %s:" % str(port))
+        print(" New thread started for %s:  (date: %s)" % (str(port),ctime(time())))
 
     def run(self, filepath='outsoursing_files/1.png'):
         self.file_send(filepath)
@@ -35,6 +36,10 @@ class ClientThread(Thread):
                 break
 
 
+    def file_get(self, path_to_save):
+        pass
+
+
 
 
 tcpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -44,9 +49,9 @@ threads = []
 
 while True:
     tcpsock.listen(5)
-    print ("Waiting for incoming connections...")
+    print("Waiting for incoming connections...")
     (conn, (ip, port)) = tcpsock.accept()
-    print ('Got connection from ', (ip, port))
+    print('Got connection from ', (ip, port))
     newthread = ClientThread(ip, port, conn)
     newthread.start()
     threads.append(newthread)
