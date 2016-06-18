@@ -40,21 +40,49 @@ class ClientThread(Thread):
         pass
 
 
+class servClientThread(Nhread):
+    pass
 
 
-tcpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-tcpsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-tcpsock.bind((TCP_IP, TCP_PORT))
-threads = []
 
-while True:
-    tcpsock.listen(5)
-    print("Waiting for incoming connections...")
-    (conn, (ip, port)) = tcpsock.accept()
-    print('Got connection from ', (ip, port))
-    newthread = ClientThread(ip, port, conn)
-    newthread.start()
-    threads.append(newthread)
+class ServerMethods:
 
-for t in threads:
-    t.join()
+    def __init__(self):
+        pass
+
+    def file_send(self):
+        pass
+
+    def connect(self):
+        pass
+
+    def disconnect(self):
+        pass
+
+    def file_get(self):
+        pass
+
+    def msg_send(self):
+        pass
+
+    def msq_get(self):
+        pass
+
+
+if __name__ == '__main__':
+    tcpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tcpsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    tcpsock.bind((TCP_IP, TCP_PORT))
+    threads = []
+
+    while True:
+        tcpsock.listen(5)
+        print("Waiting for incoming connections...")
+        (conn, (ip, port)) = tcpsock.accept()
+        print('Got connection from ', (ip, port))
+        newthread = ClientThread(ip, port, conn)
+        newthread.start()
+        threads.append(newthread)
+
+    for t in threads:
+        t.join()
