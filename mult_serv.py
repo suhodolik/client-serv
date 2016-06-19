@@ -18,7 +18,7 @@ class ClientThread(Thread):
         self.sock = sock
         print(" New thread started for %s:  (date: %s)" % (str(port),ctime(time())))
 
-    def run(self, filepath='outsoursing_files/1.png'):
+    def run(self, filepath='outsoursing_files/tarantino.jpg'):
         self.file_send(filepath)
 
     def file_send(self, filepath):
