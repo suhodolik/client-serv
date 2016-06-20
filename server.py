@@ -24,6 +24,12 @@ class Server():
         # headers = conn.recv(1024)
         # print('headers: %s' % headers)
 
+        socket.send('tarantino.jpg'.encode('utf-8'))
+        print('send filename')
+        # socket.close()
+
+        # socket = self.connect()
+
         with open(self.default_server_file, 'rb') as file:
             print('File open')
             l = file.read(1024)
@@ -51,7 +57,7 @@ class Server():
     def connect(self):
         conn_socket, addr = self.sock.accept()
         print('connected: ', addr)
-        return conn_socket, addr
+        return conn_socket
 
     def disconnect(self, conn):
         conn.close()
@@ -61,8 +67,8 @@ if __name__ == "__main__":
     my_serv = Server()
     print('инициализация сервера')
     while True:
-        connect, adr = my_serv.connect()
-        print('connected: ', adr)
+        connect = my_serv.connect()
+        # print('connected: ', adr)
         mythread = threading.Thread(target=my_serv.file_send, args=[connect])
         mythread.daemon = True
         mythread.start()

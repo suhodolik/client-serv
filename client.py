@@ -7,11 +7,16 @@ from time import time, ctime, sleep
 
 
 
-def file_get(socket):
+def file_get(socket, host, port):
+    socket.connect((host, port))
     scriptpath = os.path.dirname(__file__)
     save_time = ctime(time()).replace(' ', '_')
     extension = '.jpg'
     path_client_files = os.path.join(scriptpath, 'client_files/' + save_time + extension)
+
+    file_name = socket.recv(64)
+    print(file_name.decode('utf-8'))
+    socket.connect((host, port))
 
     with open(path_client_files + save_time + '.jpg', 'wb') as f:
         print('file created')
@@ -47,9 +52,9 @@ if __name__=='__main__':
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     host = socket.gethostname()
-    s.connect((host, TCP_PORT))
+    # s.connect((host, TCP_PORT))
     # s.send(b'HelloWorldEND')
     # upper = s.recv(111)
     # print (upper )
-    file_get(socket=s)
+    file_get(socket=s, host=host, port=TCP_PORT)
     sleep(2)
