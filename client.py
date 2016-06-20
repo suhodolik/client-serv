@@ -1,25 +1,20 @@
 # coding: utf-8
 
 import socket
-from os.path import expandvars
+import os.path
 from time import time, ctime, sleep
 
 
 
 
 def file_get(socket):
+    scriptpath = os.path.dirname(__file__)
     save_time = ctime(time()).replace(' ', '_')
     extension = '.jpg'
-    # headers = b'123123'
+    path_client_files = os.path.join(scriptpath, 'client_files/' + save_time + extension)
 
-    # socket.send(headers)
-    # path_save = expandvars(u'C:\Users\file_25.jpg').encode('utf-8')
-    path_save = 'D:\client_files\\file_' + save_time + '.jpg'
-    # name = save_time
-    # foo = r'client_files\%s(copy).png' % name
-    with open(path_save, 'wb') as f:
-    # with open(foo, 'wb') as f:
-        print('file opened')
+    with open(path_client_files + save_time + '.jpg', 'wb') as f:
+        print('file created')
         while True:
             print('receiving data...')
             data = socket.recv(1024)
@@ -29,9 +24,21 @@ def file_get(socket):
             f.write(data)
 
     print('Successfully get the file')
-    socket.send('Successfully get the file')
-    # print('connection closed')
+    socket.send(b'Successfully get the file')
 
+
+def file_send(socket):
+    scriptpath = os.path.dirname(__file__)
+    save_time = ctime(time()).replace(' ', '_')
+    extension = '.jpg'
+    path_client_files = os.path.join(scriptpath, 'client_files/tarantino.jpg')
+
+    with open(path_client_files, 'rb') as file:
+        l = file.read(1024)
+        while l:
+            socket.send(l)
+            l = file.read(1024)
+        socket.close()
 
 if __name__=='__main__':
     TCP_IP = '127.0.0.1'
