@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import socket
+import json
 import os.path
 import threading
 from time import time, ctime, sleep
@@ -18,15 +19,31 @@ class Server():
         self.sock.listen(count)  # количество клиентов
         pass
 
+    def msg_send(self, socket, msg_data):
+        json_obj = json.dumps({u'msg': msg_data}, ensure_ascii=False, indent=4)
+        msg_data = socket.send(json_obj.encode('utf-8'))
+        print('Message to client: ', msg_data)
+        return msg_data
+
+    def msg_get(self, socket):
+        msg_data = socket.recv(1024)
+        print('Message from client: ', msg_data)
+        return msg_data
+
+
     def file_send(self, socket):
         print('Thread for client ' + str(socket) + ' started! Waiting for input...')
 
         # headers = conn.recv(1024)
         # print('headers: %s' % headers)
 
-        socket.send('tarantino.jpg'.encode('utf-8'))
-        print('send filename')
-        # socket.close()
+        # data = self.msg_get(socket)
+        # print(data)
+        #
+        # # socket.send('tarantino.jpg'.encode('utf-8'))
+        # self.msg_send(socket, 'tarantino.jpg')
+        # print('send filename')
+        # # socket.close()
 
         # socket = self.connect()
 
