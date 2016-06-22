@@ -4,6 +4,7 @@ import socket
 import json
 import os.path
 from time import time, ctime, sleep
+import base64
 
 
 def client_msg_get(socket):
@@ -12,10 +13,16 @@ def client_msg_get(socket):
     return msg_data
 
 def client_msg_send(socket, msg_data):
-    json_obj = json.dumps({u'msg': msg_data}, ensure_ascii=False, indent=4)
-    msg_data = socket.send(json_obj.encode('utf-8'))
-    print('Message to server: ', msg_data)
-    return msg_data
+    try:
+        a = json.dumps(msg_data)
+    except:
+        raise ('ERROR')
+    # a = base64.b64encode(str(msg_data))
+    # data = socket.send(msg_data.encode('utf-8'))
+    data = socket.send(a.encode())
+    print('Message to server sockets: ', data)
+    print('Message to server: ', a)
+    return data
 
 
 
@@ -72,5 +79,7 @@ if __name__=='__main__':
     # s.send(b'HelloWorldEND')
     # upper = s.recv(111)
     # print (upper )
-    file_get(socket=s)
+    json_obj = {u'msg': '123'}
+    # json_obj.encode()
+    client_msg_send(socket=s, msg_data=json_obj)
     sleep(2)

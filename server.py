@@ -28,6 +28,7 @@ class Server():
     def msg_get(self, socket):
         msg_data = socket.recv(1024)
         print('Message from client: ', msg_data)
+        print('Message from client decode: ', msg_data.decode())
         return msg_data
 
 
@@ -86,7 +87,7 @@ if __name__ == "__main__":
     while True:
         connect = my_serv.connect()
         # print('connected: ', adr)
-        mythread = threading.Thread(target=my_serv.file_send, args=[connect])
+        mythread = threading.Thread(target=my_serv.msg_get, args=[connect])
         mythread.daemon = True
         mythread.start()
         #my_serv.file_send(connect)
