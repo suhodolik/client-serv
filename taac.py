@@ -3,6 +3,7 @@
 from charm.toolbox.pairinggroup import G1, G2, GT, PairingGroup, ZR, pair
 from charm.toolbox.secretutil import SecretUtil
 from Crypto.Hash import MD5
+import charm.core.engine.util as utils
 
 class TAAC():
     def __init__(self, groupObj):
@@ -287,7 +288,9 @@ def test2():
     #print(AAs['aa1']['ST'])
     #print(AAs['aa2']['ST'])
 
+    # SK['user3']['ONE']['SK']['K_gid_x'][1]
 
+    # utils.objectToBytes(SK)
     m = groupObj.random(GT)
     policy = '((ONE or THREE) and (TWO or FOUR))'
     enc_m = taac.Encrypt(m, t, policy, GPP, {'aa1': AAs['aa1']['PK'], 'aa2': AAs['aa2']['PK']})

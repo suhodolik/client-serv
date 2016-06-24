@@ -6,13 +6,12 @@ import os.path
 import threading
 from time import time, ctime, sleep
 
-class Server():
+
+class Server:
     def __init__(self, port=1404, count=1):
         scriptpath = os.path.dirname(__file__)
-        # path_client_files = os.path.join(scriptpath, save_time + extension)
         self.default_server_path = os.path.join(scriptpath, 'outsoursing_files/')
         self.default_server_file = os.path.join(self.default_server_path, 'tarantino.jpg')
-        # self.default_server_file = r'/home/ilsu/my_projects/client_serv/outsuorsing_files/tarantino.jpg'
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         host = socket.gethostname()
         self.sock.bind((host, port))
@@ -20,10 +19,9 @@ class Server():
         pass
 
     def msg_send(self, socket, msg_data):
-        json_obj = json.dumps({u'msg': msg_data}, ensure_ascii=False, indent=4)
-        msg_data = socket.send(json_obj.encode('utf-8'))
-        print('Message to client: ', msg_data)
-        return msg_data
+        msg_data_b = socket.send(msg_data)
+        print('Message to client: ', msg_data_b)
+        return msg_data_b
 
     def msg_get(self, socket):
         msg_data = socket.recv(1024)

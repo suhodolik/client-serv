@@ -13,13 +13,7 @@ def client_msg_get(socket):
     return msg_data
 
 def client_msg_send(socket, msg_data):
-    try:
-        a = json.dumps(msg_data)
-    except:
-        raise ('ERROR')
-    # a = base64.b64encode(str(msg_data))
-    # data = socket.send(msg_data.encode('utf-8'))
-    data = socket.send(a.encode())
+    data = socket.send(msg_data.encode())
     print('Message to server sockets: ', data)
     print('Message to server: ', a)
     return data
