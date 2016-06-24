@@ -7,8 +7,17 @@ from time import time, ctime, sleep
 import charm.core.engine.util as utils
 
 class Client:
-    def __init__(self, groupObj):
+    def __init__(self, groupObj, GPP):
         self._groupObj = groupObj
+        self._SK = {}
+        self._UK = {}
+        self._GPP = GPP
+        pass
+
+    def data_to_bytes(self, data):
+        pass
+
+    def bytes_to_data(self, bytes):
         pass
 
     def connect(self, socket, host, port):
@@ -17,7 +26,7 @@ class Client:
     def disconnect(self, socket):
         socket.close()
 
-    def request_secret_AA_keys(self):
+    def request_secret_AA_keys(self, socket):
         a3 = socket.send('Give me keys')
         print('Message to server: ', a3)
 
@@ -26,16 +35,19 @@ class Client:
         utils.bytesToObject(keys, group=self._groupObj)
         return keys
 
+    def get_UK_keys(self):
+        pass
+
     def DKeyCOM(self):
+        pass
+
+    def decrypt_sym_key(self):
         pass
 
     def encrypt_sym_key(self, sym_key, policy):
         # m = groupObj.random(GT)
         # policy = '((ONE or THREE) and (TWO or FOUR))'
         # enc_m = taac.Encrypt(k=, t=, policy_str=policy, GPP, {'aa1': AAs['aa1']['PK'], 'aa2': AAs['aa2']['PK']})
-        pass
-
-    def decrypt_sym_key(self):
         pass
 
     def encrypt_file(self):
