@@ -33,7 +33,18 @@ class AA_server(Server):
                                                          GPP=self._GPP,
                                                          MSK_fi_x=self._AAs['MSK'][attr])
 
-    def send_public_keys(self):
+    def generate_UK(self):
+        pass
+
+    def send_UK_server(self):
+        pass
+
+    def get_client_request(self, socket):
+        data = socket.recv(1024)
+        return data.decode()
+
+    def send_SK_keys(self, socket, SK):
+        socket.send(SK)
         pass
 
     def encode_data(self, data):
@@ -41,6 +52,12 @@ class AA_server(Server):
 
     def decode_data(self, data):
         return utils.bytesToObject(data, self._groupObj)
+
+    def data_to_bytes(self, data):
+        pass
+
+    def bytes_to_data(self, bytes):
+        pass
 
 
 class TAAC():
