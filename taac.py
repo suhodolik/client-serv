@@ -428,5 +428,5 @@ def test2():
 #     print(m)
 #     print(dec)
 # test()
-
-test2()
+if __name__ == "__main__":
+    test2()
