@@ -33,6 +33,12 @@ class AA_server(Server):
                                                          GPP=self._GPP,
                                                          MSK_fi_x=self._AAs['MSK'][attr])
 
+    def generate_UK(self):
+        pass
+
+    def send_UK_server(self):
+        pass
+
     def get_client_request(self, socket):
         data = socket.recv(1024)
         return data.decode()
