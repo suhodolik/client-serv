@@ -22,8 +22,12 @@ class Client:
         self.user_identity = user_identity
         pass
 
-    def data_to_bytes(self, data):
-        pass
+    def act_to_dict(self, action):
+        job = {
+            'action': action,
+            'user_identity': user_identity
+        }
+        return job
 
     def bytes_to_data(self, bytes):
         pass
@@ -39,13 +43,14 @@ class Client:
     def request_secret_AA_keys(self, ssocket):
         data = pickle.dumps(self.user_identity)
         ssocket.send(data)
-        answer = ssocket.recv(1024)
-        print('Answer for key request: %s' % answer)
+        answer = ssocket.recv(16384)
+        print('Answer for key request: %s' % self.decode_data(answer))
 
 
-    def get_secret_AA_keys(self, ssocket):
-        ssocket.send(pickle.dumps('Give me my keys'))
-        ssocket.send(pickle.dumps(self.user_identity))
+    #
+    # def get_secret_AA_keys(self, ssocket):
+    #     ssocket.send(pickle.dumps('Give me my keys'))
+    #     ssocket.send(pickle.dumps(self.user_identity))
 
 
     def get_UK_keys(self):
@@ -75,6 +80,22 @@ class Client:
     def get_file_from_server(self):
         pass
 
+    def encode_data(self, data):
+        try:
+            enc_data = utils.objectToBytes(data, self._groupObj)
+        except:
+            print('!!!__ERROR__!!!  Ошибка encode_data')
+            return {'!!!__ERROR__!!!  Ошибка encode_data'}
+        return enc_data
+
+    def decode_data(self, data):
+        try:
+            enc_data = utils.bytesToObject(data, self._groupObj)
+        except:
+            print('!!!__ERROR__!!!  Ошибка decode_data')
+            return {'!!!__ERROR__!!!  Ошибка decode_data'}
+        return enc_data
+
 
 if __name__ == '__main__':
     groupObj = PairingGroup('SS512')
@@ -84,6 +105,11 @@ if __name__ == '__main__':
     user_identity = {"user_name": "user_1",
                      "user_attributes": ['ONE', 'TWO']}
 
+    task_for_server = {
+        "action": "get_SK",
+        "user_identity": user_identity
+    }
+
     host = socket.gethostname()
     AA_1_port = 14001
 
@@ -92,7 +118,12 @@ if __name__ == '__main__':
 
     # подкдючение к AA и получение секретных ключей
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((host, AA_1_port))
+    user_1.connect(socket=s, host=host, port=AA_1_port)
     user_1.request_secret_AA_keys(ssocket=s)
+
+    # user_1.connect(socket=s, host=host, port=AA_1_port)
+    # user_1.get_secret_AA_keys(ssocket=s)
+
+
 
     sleep(2)

@@ -24,6 +24,8 @@ class AA_server:
         self.attributes = attributes
         self._users = {}
         self._SK = {}
+        self._UK = {}
+        self._RL = {}
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         host = socket.gethostname()
         self.sock.bind((host, port))
@@ -43,30 +45,62 @@ class AA_server:
                                                          GPP=self._GPP,
                                                          MSK_fi_x=self._AAs['MSK'][attr])
 
+    def prepare_UK(self):
+        UK = {}
+        for attr in self.attributes:
+            UK[attr] = self._taac.UKeyGen(0,
+                                          attr,
+                                          self._AAs['ST'][attr],
+                                          self._RL,
+                                          self._GPP,
+                                          self._AAs['MSK'][attr],
+                                          self._AAs['PK']['H'])
+
+    def _store_keys_to_cloud(self, socket):
+        pass
+
+
     def generate_UK(self):
         pass
 
     def send_UK_server(self):
         pass
 
-    def get_client_request(self, ssocket):
+
+    # Отправляет клиенту сгенерированные SK, если они генерируются первый раз
+    def send_SK_to_user(self, ssocket):
         data_client = ssocket.recv(1024)
         data_client = pickle.loads(data_client)
         if not data_client['user_name'] in self._users:
             self._prepare_user_keys(data_client['user_name'], data_client['user_attributes'])
-            ssocket.send(b'OK')
+            by_SK = self.encode_data(self._SK[data_client['user_name']])
+            ssocket.send(by_SK)
         else:
             ssocket.send(b'ERROR')
+            # by_SK = self.encode_data(self._SK[data_client['user_name']])
+            # ssocket.send(by_SK)
         ssocket.close()
+
+
 
     def send_public_keys(self):
         pass
 
     def encode_data(self, data):
-        return utils.objectToBytes(data, self._groupObj)
+        try:
+            enc_data = utils.objectToBytes(data, self._groupObj)
+        except:
+            print('!!!__ERROR__!!!  Ошибка encode_data')
+            return {'!!!__ERROR__!!!  Ошибка encode_data'}
+        return enc_data
 
     def decode_data(self, data):
-        return utils.bytesToObject(data, self._groupObj)
+        try:
+            enc_data = utils.bytesToObject(data, self._groupObj)
+        except:
+            print('!!!__ERROR__!!!  Ошибка decode_data')
+            return {'!!!__ERROR__!!!  Ошибка decode_data'}
+        return enc_data
 
 
     def connect(self):
@@ -87,9 +121,11 @@ if __name__ == "__main__":
     print('инициализация сервера')
     while True:
         connect = AA_1.connect()
-        # print('connected: ', adr)
+
+        AA_1.send_SK_to_user(connect)
+"""
         mythread = threading.Thread(target=AA_1.get_client_request, args=[connect])
         mythread.daemon = True
         mythread.start()
-
+"""
     # AA_2 = AA_server(port=14002, count=1, groupObj=groupObj)
