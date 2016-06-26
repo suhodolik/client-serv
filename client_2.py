@@ -40,21 +40,19 @@ class Client:
 
     # SK ключи
 
-    def request_secret_AA_keys(self, ssocket):
+    def get_SK_from_AA(self, ssocket):
         data = pickle.dumps(self.user_identity)
         ssocket.send(data)
         answer = ssocket.recv(16384)
         print('Answer for key request: %s' % self.decode_data(answer))
 
 
-    #
-    # def get_secret_AA_keys(self, ssocket):
-    #     ssocket.send(pickle.dumps('Give me my keys'))
-    #     ssocket.send(pickle.dumps(self.user_identity))
 
-
-    def get_UK_keys(self):
-
+    def get_UK_from_cloud(self, sock):
+        sock.send(pickle.dumps({'action': 'GET UK'}))
+        data = sock.recv(16384)
+        self._UK = self.decode_data(data)
+        print('UK успешно обновлен')
 
         pass
 
@@ -114,6 +112,7 @@ if __name__ == '__main__':
 
     host = socket.gethostname()
     AA_1_port = 14001
+    cloud_port = 1404
 
 
     user_1 = Client(groupObj, user_identity)
@@ -121,8 +120,12 @@ if __name__ == '__main__':
     # подкдючение к AA и получение секретных ключей
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     user_1.connect(socket=s, host=host, port=AA_1_port)
-    user_1.request_secret_AA_keys(ssocket=s)
+    user_1.get_SK_from_AA(ssocket=s)
 
+    s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    user_1.connect(socket=s2, host=host, port=cloud_port)
+    sleep(5)
+    user_1.get_UK_from_cloud(sock=s2)
     # user_1.connect(socket=s, host=host, port=AA_1_port)
     # user_1.get_secret_AA_keys(ssocket=s)
 

@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import socket
+import pickle
 import json
 import os.path
 import threading
@@ -72,11 +73,17 @@ class Server:
         print('GET UK OK')
 
     def send_UK_to_client(self, sock):
-        sock.send(self.decode_data(self.UK))
+        data_client = sock.recv(1024)
+        data_client = pickle.loads(data_client)
+        if data_client['action'] == 'GET UK':
+            sock.send(self.decode_data(self.UK))
+            print('Отправка UK на клиент')
+        else:
+            print('Неизвестный запрос от клиента')
+        sock.close()
 
 
-
-    def connect(self):
+    def accept_connection(self):
         conn_socket, addr = self.sock.accept()
         print('connected: ', addr)
         return conn_socket
@@ -105,7 +112,7 @@ if __name__ == "__main__":
     my_serv = Server()
     print('инициализация сервера')
     while True:
-        connect = my_serv.connect()
+        connect = my_serv.accept_connection()
         # print('connected: ', adr)
         mythread = threading.Thread(target=my_serv.get_UK_from_AA, args=[connect])
         mythread.daemon = True

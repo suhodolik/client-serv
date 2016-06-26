@@ -100,7 +100,7 @@ class AA_server:
         return enc_data
 
 
-    def connect(self):
+    def acept_connection(self):
         conn_socket, addr = self.sock.accept()
         print('connected: ', addr)
         return conn_socket
@@ -117,9 +117,9 @@ if __name__ == "__main__":
     AA_1 = AA_server(port=AA_1_port, count=1, groupObj=groupObj, GPP=GPP, attributes=['ONE', 'TWO'])
     print('инициализация сервера')
     while True:
-        connect = AA_1.connect()
+        conn_sock = AA_1.acept_connection()
 
-        AA_1.send_SK_to_user(connect)
+        AA_1.send_SK_to_user(conn_sock)
         print('Start UK gen')
         AA_1.send_UK_to_cloud()
 """
