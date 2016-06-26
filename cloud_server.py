@@ -15,7 +15,7 @@ class Server:
         scriptpath = os.path.dirname(__file__)
         self.default_server_path = os.path.join(scriptpath, 'outsoursing_files/')
         self.default_server_file = os.path.join(self.default_server_path, 'tarantino.jpg')
-        sel
+
 
         self._groupObj = PairingGroup('SS512')
         self.UK = {}
