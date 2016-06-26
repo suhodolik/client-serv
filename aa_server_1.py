@@ -25,7 +25,8 @@ class AA_server:
         self._users = {}
         self._SK = {}
         self._UK = {}
-        self._RL = {}
+        self._RL = {'ONE': [], 'TWO': [], 'THREE': [], 'FOUR': []}
+        self.cloud_server_port = 1404
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         host = socket.gethostname()
         self.sock.bind((host, port))
@@ -45,10 +46,10 @@ class AA_server:
                                                          GPP=self._GPP,
                                                          MSK_fi_x=self._AAs['MSK'][attr])
 
-    def prepare_UK(self):
-        UK = {}
+    def _prepare_UK(self):
+        # UK = {}
         for attr in self.attributes:
-            UK[attr] = self._taac.UKeyGen(0,
+            self._UK[attr] = self._taac.UKeyGen(0,
                                           attr,
                                           self._AAs['ST'][attr],
                                           self._RL,
@@ -56,16 +57,12 @@ class AA_server:
                                           self._AAs['MSK'][attr],
                                           self._AAs['PK']['H'])
 
-    def _store_keys_to_cloud(self, socket):
-        pass
-
-
-    def generate_UK(self):
-        pass
-
-    def send_UK_server(self):
-        pass
-
+    def send_UK_to_cloud(self):
+        self._prepare_UK()
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((socket.gethostname(), self.cloud_server_port))
+        s.send(self.encode_data(self._UK))
+        s.close()
 
     # Отправляет клиенту сгенерированные SK, если они генерируются первый раз
     def send_SK_to_user(self, ssocket):
@@ -123,6 +120,8 @@ if __name__ == "__main__":
         connect = AA_1.connect()
 
         AA_1.send_SK_to_user(connect)
+        print('Start UK gen')
+        AA_1.send_UK_to_cloud()
 """
         mythread = threading.Thread(target=AA_1.get_client_request, args=[connect])
         mythread.daemon = True

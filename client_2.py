@@ -54,6 +54,8 @@ class Client:
 
 
     def get_UK_keys(self):
+
+
         pass
 
     def DKeyCOM(self):
@@ -102,7 +104,7 @@ if __name__ == '__main__':
     TCP_IP = 'localhost'
     TCP_PORT = 9001
     BUFFER_SIZE = 1024
-    user_identity = {"user_name": "user_1",
+    user_identity = {"user_name": "user_2",
                      "user_attributes": ['ONE', 'TWO']}
 
     task_for_server = {

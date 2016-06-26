@@ -65,10 +65,15 @@ class Server:
         print('Successfully get the file')
 
     # Получение ключей UK
-    def get_UK(self, socket):
-        data = socket.recv(16384)
+    def get_UK_from_AA(self, sock):
+        data = sock.recv(16384)
         encdata = self.encode_data(data)
         self.UK = encdata
+        print('GET UK OK')
+
+    def send_UK_to_client(self, sock):
+        sock.send(self.decode_data(self.UK))
+
 
 
     def connect(self):
@@ -102,7 +107,7 @@ if __name__ == "__main__":
     while True:
         connect = my_serv.connect()
         # print('connected: ', adr)
-        mythread = threading.Thread(target=my_serv.msg_get, args=[connect])
+        mythread = threading.Thread(target=my_serv.get_UK_from_AA, args=[connect])
         mythread.daemon = True
         mythread.start()
         #my_serv.file_send(connect)
