@@ -221,7 +221,7 @@ class TAAC():
     #Функция расшифрования
     #{DK_gid_x_t}x->S_gid_t - набор компонентов ключа DK для атрибутов пользователя
     #{PK_d} - набор открытых ключей атрибутирующего центра
-    def Decrypt(self, CT, GPP, PK_d, DK_gid_x_t, gid):
+    def Decrypt(self, CT: object, GPP: object, PK_d: object, DK_gid_x_t: object, gid: object) -> object:
         #Создние списка атрибутов пользователя
         usr_attr = list(DK_gid_x_t.keys())
         #Создание объекта политики доступа из строки

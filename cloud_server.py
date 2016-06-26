@@ -12,7 +12,7 @@ from charm.toolbox.pairinggroup import G1, G2, GT, PairingGroup, ZR, pair
 
 
 class Server:
-    def __init__(self, port=1404, count=1):
+    def __init__(self, port, count=1):
         scriptpath = os.path.dirname(__file__)
         self.default_server_path = os.path.join(scriptpath, 'outsoursing_files/')
         self.default_server_file = os.path.join(self.default_server_path, 'tarantino.jpg')
@@ -26,17 +26,6 @@ class Server:
         self.sock.bind((host, port))
         self.sock.listen(count)  # количество клиентов
         pass
-
-    # def msg_send(self, socket, msg_data):
-    #     msg_data_b = socket.send(msg_data)
-    #     print('Message to client: ', msg_data_b)
-    #     return msg_data_b
-    #
-    # def msg_get(self, socket):
-    #     msg_data = socket.recv(1024)
-    #     print('Message from client: ', msg_data)
-    #     print('Message from client decode: ', msg_data.decode())
-    #     return msg_data
 
 
     def file_send(self, socket):
@@ -67,20 +56,22 @@ class Server:
 
     # Получение ключей UK
     def get_UK_from_AA(self, sock):
+        print('GET UK: start...')
         data = sock.recv(16384)
         encdata = self.encode_data(data)
         self.UK = encdata
-        print('GET UK OK')
+        print('GET UK: OK')
 
     def send_UK_to_client(self, sock):
         data_client = sock.recv(1024)
         data_client = pickle.loads(data_client)
         if data_client['action'] == 'GET UK':
-            sock.send(self.decode_data(self.UK))
-            print('Отправка UK на клиент')
+            print('Отправка UK на клиент: передача...')
+            sock.send(self.encode_data(self.UK))
         else:
             print('Неизвестный запрос от клиента')
         sock.close()
+        print('Отправка UK на клиент: завершено')
 
 
     def accept_connection(self):
@@ -109,12 +100,19 @@ class Server:
 
 
 if __name__ == "__main__":
-    my_serv = Server()
+    cloud_server = Server(port=1404)
+    cloud_server_for_client = Server(port=1405)
     print('инициализация сервера')
     while True:
-        connect = my_serv.accept_connection()
+        connect = cloud_server.accept_connection()
+        connect_client = cloud_server_for_client.accept_connection()
         # print('connected: ', adr)
-        mythread = threading.Thread(target=my_serv.get_UK_from_AA, args=[connect])
-        mythread.daemon = True
-        mythread.start()
+        AA_thread = threading.Thread(target=cloud_server.get_UK_from_AA, args=[connect])
+        client_thread = threading.Thread(target=cloud_server_for_client.send_UK_to_client, args=[connect_client])
+        client_thread.daemon = True
+        AA_thread.daemon = True
+        AA_thread.start()
+        client_thread.start()
+
+
         #my_serv.file_send(connect)

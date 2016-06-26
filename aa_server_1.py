@@ -13,18 +13,19 @@ from server import Server
 
 
 class AA_server:
-    def __init__(self, port, count, groupObj, GPP, attributes):  # groupObj ???
+    def __init__(self, port, count, groupObj, GPP, attributes, AA_name):  # groupObj ???
         self._groupObj = groupObj
         self._taac = TAAC(groupObj=groupObj)
         self._time_t = 1
         self._GPP = GPP
         # Инициализация АЦ сервера: принимает глобальные параметры и атрибуты, за которые он отвечает
         # Генерирует PK и MSK, хранение в self._AAs
+        self.AA_name = AA_name
         self._AAs = self._taac.AuthoritySetup(GPP=self._GPP, U=attributes)
         self.attributes = attributes
         self._users = {}
         self._SK = {}
-        self._UK = {}
+        self.UK = {}
         self._RL = {'ONE': [], 'TWO': [], 'THREE': [], 'FOUR': []}
         self.cloud_server_port = 1404
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -34,7 +35,7 @@ class AA_server:
 
     # Вырабатывает секретные ключи для пользователя user_name для каждого атрибута из user_attributes
 
-    def _prepare_user_keys(self, user_name, user_attributes):  # user_name='user_1', user_attributes=['ONE', 'TWO', 'SIX']
+    def _prepare_SK(self, user_name, user_attributes):  # user_name='user_1', user_attributes=['ONE', 'TWO', 'SIX']
         self._users[user_name] = user_attributes
         self._SK[user_name] = {}
 
@@ -49,7 +50,7 @@ class AA_server:
     def _prepare_UK(self):
         # UK = {}
         for attr in self.attributes:
-            self._UK[attr] = self._taac.UKeyGen(0,
+            self.UK[attr] = self._taac.UKeyGen(0,
                                           attr,
                                           self._AAs['ST'][attr],
                                           self._RL,
@@ -61,27 +62,37 @@ class AA_server:
         self._prepare_UK()
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((socket.gethostname(), self.cloud_server_port))
-        s.send(self.encode_data(self._UK))
+        s.send(self.encode_data(self.UK))
         s.close()
 
     # Отправляет клиенту сгенерированные SK, если они генерируются первый раз
-    def send_SK_to_user(self, ssocket):
-        data_client = ssocket.recv(1024)
-        data_client = pickle.loads(data_client)
-        if not data_client['user_name'] in self._users:
-            self._prepare_user_keys(data_client['user_name'], data_client['user_attributes'])
-            by_SK = self.encode_data(self._SK[data_client['user_name']])
-            ssocket.send(by_SK)
+    def send_SK_to_user(self, sock, data_client):
+        # data_client = sock.recv(1024)
+        # data_client = pickle.loads(data_client)
+        if not data_client['user_identity']['user_name'] in self._users:
+            self._prepare_SK(user_name=data_client['user_identity']['user_name'],
+                             user_attributes=data_client['user_identity']['user_name'])
+            encode_SK = self.encode_data(self._SK[data_client['user_identity']['user_name']])
+            sock.send(encode_SK)
         else:
-            ssocket.send(b'ERROR')
-            # by_SK = self.encode_data(self._SK[data_client['user_name']])
-            # ssocket.send(by_SK)
-        ssocket.close()
+            sock.send(b'ERROR')
+            # by_SK = self.encode_data(self._SK[data_client['user_identity']['user_name']])
+            # sock.send(by_SK)
+        sock.close()
 
+    # Отправляет пользователю PK
+    def send_PK_to_user(self, sock, data_client):
+        # data_client = sock.recv(1024)
+        # data_client = pickle.loads(data_client)
+        # if data_client['action'] == 'GET PK':
+        sock.send(pickle.dumps({'AA_name': self.AA_name}))
+        # else:
+        #     sock.send(b'!!!__ERROR__!!!')
+        #     print('ERROR request for PK')
+        sock.send(self.encode_data(self._AAs['PK']))
 
-
-    def send_public_keys(self):
         pass
+
 
     def encode_data(self, data):
         try:
@@ -105,6 +116,17 @@ class AA_server:
         print('connected: ', addr)
         return conn_socket
 
+    def get_request_from_client(self, sock):
+        job = sock.recv(1024)
+        dec_job = pickle.loads(job)
+        if dec_job['action'] == 'GET PK':
+            print('GET PK: start')
+            self.send_PK_to_user(sock=sock, data_client=dec_job)
+        elif dec_job['action'] == 'GET SK':
+            print('GET SK: start')
+            self.send_SK_to_user(sock=sock, data_client=dec_job)
+        return dec_job
+
 
 if __name__ == "__main__":
     groupObj = PairingGroup('SS512')
@@ -114,14 +136,16 @@ if __name__ == "__main__":
     AA_1_port = 14001
 
 
-    AA_1 = AA_server(port=AA_1_port, count=1, groupObj=groupObj, GPP=GPP, attributes=['ONE', 'TWO'])
+    AA_1 = AA_server(port=AA_1_port, count=1, groupObj=groupObj, GPP=GPP, attributes=['ONE', 'TWO'], AA_name='aa1')
     print('инициализация сервера')
     while True:
         conn_sock = AA_1.acept_connection()
 
-        AA_1.send_SK_to_user(conn_sock)
-        print('Start UK gen')
-        AA_1.send_UK_to_cloud()
+        dec_job = AA_1.get_request_from_client(conn_sock)
+        if dec_job['action'] == 'GET PK':
+            print('Start UK gen')
+
+            AA_1.send_UK_to_cloud()
 """
         mythread = threading.Thread(target=AA_1.get_client_request, args=[connect])
         mythread.daemon = True

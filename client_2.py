@@ -16,8 +16,13 @@ from taac import TAAC
 class Client:
     def __init__(self, groupObj, GPP):
         self._groupObj = groupObj
+
+        self._taac = TAAC(self._groupObj)
+        self._t = 0
+        self.AAs = {}
         self._SK = {}
         self._UK = {}
+        self._DK = {}
         self._GPP = GPP
         self.user_identity = user_identity
         pass
@@ -33,40 +38,66 @@ class Client:
         pass
 
     def connect(self, socket, host, port):
-        socket.connect((host, port))
+        sock = socket.connect((host, port))
+        return sock
 
     def disconnect(self, socket):
         socket.close()
 
-    # SK ключи
+    # получить PK ключи
+    def get_PK_from_AA(self, sock, job):
+        data = pickle.dumps(job)
+        sock.send(data)
+        answ_name = sock.recv(1024)
+        answer_name = pickle.loads(answ_name)
+        print('GET PK for', answer_name['AA_name'])
+        self.AAs[answer_name['AA_name']]['PK'] = self.decode_data(sock.recv(16384))
+        print('GET PK: "OK"')
 
-    def get_SK_from_AA(self, ssocket):
-        data = pickle.dumps(self.user_identity)
-        ssocket.send(data)
-        answer = ssocket.recv(16384)
+    # получить SK ключи
+    def get_SK_from_AA(self, sock, job):
+        sock.send(pickle.dumps(job))
+        # data = pickle.dumps(self.user_identity)
+        # sock.send(data)
+        answer = sock.recv(16384)
         print('Answer for key request: %s' % self.decode_data(answer))
+        if not '!!!__ERROR__!!!' in self.decode_data(answer):
+            self._SK = self.decode_data(answer)
 
-
-
+    # получить UK ключи
     def get_UK_from_cloud(self, sock):
         sock.send(pickle.dumps({'action': 'GET UK'}))
         data = sock.recv(16384)
         self._UK = self.decode_data(data)
-        print('UK успешно обновлен')
+        print(user_identity["user_name"], user_identity["user_attributes"], 'UK успешно обновлен')
 
         pass
 
-    def DKeyCOM(self):
-        pass
+    # вычислить DK ключи
 
-    def decrypt_sym_key(self):
-        pass
+    def _prepare_DK(self):
+        self._DK[self._t] = {}
+        for attr in self.user_identity['user_attributes']:
+            self._DK[self._t] = self._taac.DKeyCom(self._SK[attr], self._UK[attr])
+            if self._DK[self._t][attr] != False:
+                print(user_identity["user_name"], user_identity["user_attributes"], ': DK вычислен успешно')
 
-    def encrypt_sym_key(self, sym_key, policy):
-        # m = groupObj.random(GT)
-        # policy = '((ONE or THREE) and (TWO or FOUR))'
-        # enc_m = taac.Encrypt(k=, t=, policy_str=policy, GPP, {'aa1': AAs['aa1']['PK'], 'aa2': AAs['aa2']['PK']})
-        pass
+
+
+
+    def decrypt_SYM_KEY(self, enc_key):
+        print('User attr:', self.user_identity)
+        print('     CT:', enc_key)
+        dec_key = self._taac.Decrypt(CT=enc_key, GPP=self._GPP, PK_d={},
+                                     DK_gid_x_t=self._DK[self._t], gid=user_identity["user_name"])
+        print('     Dec CT:', dec_key)
+        return dec_key
+
+    def encrypt_SYM_KEY(self, policy, SYM_KEY=None):
+        if not SYM_KEY:
+            SYM_KEY = groupObj.random(GT)
+        enc_key = self._taac.Encrypt(k=SYM_KEY, t_l=self._t, policy_str=policy, GPP=self.GPP, PK_d=self.AAs)
+        return enc_key
 
     def encrypt_file(self):
         pass
@@ -83,16 +114,16 @@ class Client:
     def encode_data(self, data):
         try:
             enc_data = utils.objectToBytes(data, self._groupObj)
-        except:
-            print('!!!__ERROR__!!!  Ошибка encode_data')
+        except Exception as e:
+            print('!!!__ERROR__!!!  Ошибка encode_data', e)
             return {'!!!__ERROR__!!!  Ошибка encode_data'}
         return enc_data
 
     def decode_data(self, data):
         try:
             enc_data = utils.bytesToObject(data, self._groupObj)
-        except:
-            print('!!!__ERROR__!!!  Ошибка decode_data')
+        except Exception as e:
+            print('!!!__ERROR__!!!  Ошибка decode_data', e)
             return {'!!!__ERROR__!!!  Ошибка decode_data'}
         return enc_data
 
@@ -105,27 +136,37 @@ if __name__ == '__main__':
     user_identity = {"user_name": "user_2",
                      "user_attributes": ['ONE', 'TWO']}
 
-    task_for_server = {
-        "action": "get_SK",
-        "user_identity": user_identity
+    job_SK = {
+        "action": 'GET SK',
+        "user_identity": user_identity,
     }
 
+    job_PK = {
+        "action": 'GET PK',
+        "user_identity": user_identity,
+    }
     host = socket.gethostname()
     AA_1_port = 14001
-    cloud_port = 1404
+    cloud_port = 1405
 
 
     user_1 = Client(groupObj, user_identity)
 
     # подкдючение к AA и получение секретных ключей
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    user_1.connect(socket=s, host=host, port=AA_1_port)
-    user_1.get_SK_from_AA(ssocket=s)
+    socket_for_AA = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    user_1.connect(socket=socket_for_AA, host=host, port=AA_1_port)
+    user_1.get_SK_from_AA(sock=socket_for_AA, job=job_SK)
 
-    s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    user_1.connect(socket=s2, host=host, port=cloud_port)
+    sock_for_cloud = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    user_1.connect(socket=sock_for_cloud, host=host, port=cloud_port)
     sleep(5)
-    user_1.get_UK_from_cloud(sock=s2)
+    user_1.get_UK_from_cloud(sock=sock_for_cloud)
+
+    socket_for_AA = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    user_1.connect(socket=socket_for_AA, host=host, port=AA_1_port)
+    user_1.get_PK_from_AA(sock=socket_for_AA, job=job_PK)
+
+
     # user_1.connect(socket=s, host=host, port=AA_1_port)
     # user_1.get_secret_AA_keys(ssocket=s)
 
